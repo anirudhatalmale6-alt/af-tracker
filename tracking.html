@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracking Submitted Assignment Status - Advance Forensic</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --navy: #0a1628;
+            --navy-light: #121f36;
+            --navy-card: #162033;
+            --blue: #276EF1;
+            --blue-hover: #1B5CD7;
+            --blue-glow: rgba(39, 110, 241, 0.15);
+            --green: #05944F;
+            --green-bg: rgba(5, 148, 79, 0.1);
+            --red: #E54D42;
+            --red-bg: rgba(229, 77, 66, 0.1);
+            --gold: #C9A227;
+            --gold-bg: rgba(201, 162, 39, 0.1);
+            --text: #e8edf5;
+            --text-dim: rgba(232, 237, 245, 0.45);
+            --text-mid: rgba(232, 237, 245, 0.65);
+            --border: rgba(255, 255, 255, 0.08);
+            --radius: 12px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--navy);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        .page-header {
+            background: linear-gradient(135deg, #0a1628 0%, #132244 50%, #0a1628 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 0;
+        }
+        .header-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px 24px 28px;
+            text-align: center;
+        }
+        .header-logo {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            margin-bottom: 16px;
+            box-shadow: 0 0 24px rgba(201, 162, 39, 0.15);
+        }
+        .header-title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            margin-bottom: 6px;
+        }
+        .header-sub {
+            font-size: 13px;
+            color: var(--text-dim);
+            font-weight: 400;
+        }
+
+        /* ===== SEARCH SECTION ===== */
+        .search-section {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px 24px 0;
+        }
+        .search-box {
+            display: flex;
+            gap: 8px;
+            background: var(--navy-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 6px;
+        }
+        .search-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 12px 14px;
+            color: var(--text);
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+        }
+        .search-box input::placeholder { color: var(--text-dim); }
+        .search-box button {
+            background: var(--blue);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            padding: 12px 28px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .search-box button:hover { background: var(--blue-hover); }
+
+        /* ===== RESULTS ===== */
+        .results-section {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 16px 24px 40px;
+        }
+        .results-count {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            color: var(--text-dim);
+            opacity: 0.4;
+            margin-bottom: 12px;
+        }
+        .empty-state p {
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+
+        /* ===== CARD ===== */
+        .card {
+            background: var(--navy-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+            animation: cardSlide 0.35s ease;
+        }
+        @keyframes cardSlide {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card.urgent { border-color: rgba(229, 77, 66, 0.4); }
+        .card:hover { border-color: rgba(255, 255, 255, 0.12); }
+
+        .card-row {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            cursor: pointer;
+            gap: 12px;
+        }
+        .card-row:hover { background: rgba(255, 255, 255, 0.02); }
+        .card-name {
+            font-size: 14px;
+            font-weight: 600;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .card-claim {
+            font-size: 11px;
+            color: var(--text-dim);
+            flex-shrink: 0;
+            margin-right: 4px;
+        }
+        .card-eta {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            background: var(--blue);
+        }
+        .card-eta.delivered { background: var(--green); }
+        .card-eta.overdue { background: var(--red); }
+        .card-eta.delayed { background: var(--gold); color: #1a1400; }
+        .card-flag {
+            flex-shrink: 0;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            transition: background 0.15s;
+        }
+        .card-flag:hover { background: rgba(229, 77, 66, 0.1); }
+        .card-flag svg { width: 16px; height: 16px; color: var(--text-dim); transition: color 0.15s; }
+        .card-flag:hover svg { color: var(--red); }
+        .card-flag.flagged svg { color: var(--red); filter: drop-shadow(0 0 4px rgba(229,77,66,0.3)); }
+        .card-chevron {
+            color: var(--text-dim);
+            flex-shrink: 0;
+            transition: transform 0.25s;
+        }
+        .card.expanded .card-chevron { transform: rotate(180deg); }
+
+        /* Detail */
+        .card-detail {
+            display: none;
+            padding: 0 16px 16px;
+        }
+        .card.expanded .card-detail { display: block; }
+
+        /* Steps */
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0 16px;
+            position: relative;
+        }
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: 36px;
+            right: 36px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+        .step-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #1c2a42;
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 6px;
+            transition: all 0.3s;
+        }
+        .step-dot svg { width: 14px; height: 14px; color: rgba(255, 255, 255, 0.25); }
+        .step.done .step-dot { background: var(--green); border-color: var(--green); }
+        .step.done .step-dot svg { color: #fff; }
+        .step.active .step-dot { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 4px var(--blue-glow); }
+        .step.active .step-dot svg { color: #fff; }
+        .step-label {
+            font-size: 10px;
+            color: var(--text-dim);
+            font-weight: 600;
+            text-align: center;
+        }
+        .step.done .step-label { color: var(--green); }
+        .step.active .step-label { color: var(--blue); }
+
+        /* Info rows */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 16px;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .info-key { font-size: 12px; color: var(--text-dim); }
+        .info-val { font-size: 12px; font-weight: 600; }
+
+        /* Urgent button */
+        .urgent-btn {
+            display: block;
+            width: 100%;
+            margin-top: 12px;
+            padding: 10px 0;
+            background: var(--red-bg);
+            border: 1px solid rgba(229, 77, 66, 0.25);
+            border-radius: 8px;
+            color: var(--red);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            letter-spacing: 0.5px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .urgent-btn:hover { background: rgba(229, 77, 66, 0.15); }
+        .urgent-btn.is-urgent { background: var(--red); color: #fff; border-color: var(--red); }
+
+        /* Request form */
+        .request-form {
+            margin-top: 10px;
+            padding: 12px;
+            background: var(--blue-glow);
+            border: 1px solid rgba(39, 110, 241, 0.15);
+            border-radius: 10px;
+            display: none;
+        }
+        .request-form.open { display: block; }
+        .request-form-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--blue);
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+        .form-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        .form-row label {
+            font-size: 12px;
+            color: var(--text-mid);
+            white-space: nowrap;
+            min-width: 48px;
+        }
+        .request-form input[type="date"] {
+            flex: 1;
+            background: var(--navy-light);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 10px;
+            color: var(--text);
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            color-scheme: dark;
+        }
+        .request-form textarea {
+            width: 100%;
+            background: var(--navy-light);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 10px;
+            color: var(--text);
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            resize: vertical;
+            min-height: 50px;
+            max-height: 120px;
+        }
+        .request-form input:focus, .request-form textarea:focus { border-color: var(--blue); }
+        .submit-btn {
+            background: var(--blue);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            padding: 8px 18px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 4px;
+            transition: background 0.2s;
+        }
+        .submit-btn:hover { background: var(--blue-hover); }
+        .request-msg {
+            font-size: 12px;
+            color: var(--green);
+            display: none;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        /* ===== DOWNLOAD BANNER ===== */
+        .download-banner {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .download-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            background: linear-gradient(135deg, #132244, #1a3060);
+            border: 1px solid rgba(39, 110, 241, 0.2);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-top: 16px;
+        }
+        .download-text { flex: 1; }
+        .download-text h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .download-text p {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+        .download-btn {
+            background: var(--blue);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            white-space: nowrap;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .download-btn:hover { background: var(--blue-hover); }
+        .download-btn svg { width: 16px; height: 16px; }
+
+        /* ===== STATUS BAR ===== */
+        .status-bar {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 12px 24px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+        .status-bar.ok { color: var(--green); }
+        .status-bar.err { color: var(--red); }
+
+        /* ===== FOOTER ===== */
+        .page-footer {
+            border-top: 1px solid var(--border);
+            padding: 24px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 20px;
+        }
+        .page-footer a { color: var(--blue); text-decoration: none; }
+        .page-footer a:hover { text-decoration: underline; }
+
+        /* ===== LOADING SPINNER ===== */
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 640px) {
+            .header-inner { padding: 24px 16px 20px; }
+            .search-section, .results-section, .download-banner { padding-left: 16px; padding-right: 16px; }
+            .search-box { flex-direction: column; }
+            .search-box button { width: 100%; }
+            .info-grid { grid-template-columns: 1fr; }
+            .download-inner { flex-direction: column; text-align: center; }
+            .card-claim { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-header">
+        <div class="header-inner">
+            <img src="logo.png" alt="Advance Forensic" class="header-logo" id="headerLogo">
+            <h1 class="header-title">Tracking Submitted Assignment Status</h1>
+            <p class="header-sub">Search by name or claim number to track your inspection status</p>
+        </div>
+    </div>
+
+    <div class="search-section">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Enter name or claim number..." autocomplete="off">
+            <button onclick="doSearch()" id="searchBtn">Track Status</button>
+        </div>
+    </div>
+
+    <div class="status-bar" id="statusBar">Connecting to live data...</div>
+
+    <div class="results-section" id="resultsSection">
+        <div class="empty-state" id="emptyState">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <p>Enter a name or claim number above to check your inspection status</p>
+        </div>
+    </div>
+
+    <div class="download-banner">
+        <div class="download-inner">
+            <div class="download-text">
+                <h3>Get the Desktop Widget</h3>
+                <p>Track inspections right from your desktop with our lightweight widget for Windows</p>
+            </div>
+            <a href="https://github.com/anirudhatalmale6-alt/project-status-widget/releases/latest" target="_blank" class="download-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Download for Windows
+            </a>
+        </div>
+    </div>
+
+    <div class="page-footer">
+        &copy; 2026 Advance Forensic &middot; <a href="https://advanceforensic.com">advanceforensic.com</a>
+    </div>
+
+<script>
+    const SHEET_ID = '167nzPAhyO7M0WzhuXjMUOZIi5AFCiyDhCZMNAM7PXOk';
+    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+
+    const HEADER_MAP = {
+        'state': 'State', 'city': 'City', 'carrier': 'Carrier',
+        'claim': 'Claim No', 'name': 'Name', 'inspection': 'Inspection',
+        'expected': 'Expected Delivery', 'cause': 'Cause of Delay',
+        'delay': 'Cause of Delay', 'last': 'Last Name'
+    };
+
+    function cleanHeader(raw) {
+        raw = raw.trim().replace(/^"|"$/g, '');
+        if (!raw) return '';
+        const first = raw.split(/\s+/)[0].toLowerCase().replace(/:$/, '');
+        return HEADER_MAP[first] || raw;
+    }
+
+    function toKey(h) { return h.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''); }
+
+    function parseCSV(text) {
+        const lines = text.split('\n');
+        if (!lines.length) return { headers: [], projects: [] };
+
+        function parseLine(line) {
+            const fields = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const c = line[i];
+                if (c === '"') {
+                    if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
+                    else { inQuotes = !inQuotes; }
+                } else if (c === ',' && !inQuotes) {
+                    fields.push(current.trim());
+                    current = '';
+                } else {
+                    current += c;
+                }
+            }
+            fields.push(current.trim());
+            return fields;
+        }
+
+        const rawHeaders = parseLine(lines[0]);
+        const headers = [];
+        const colIdx = [];
+        rawHeaders.forEach((h, i) => {
+            const cleaned = cleanHeader(h);
+            if (cleaned) { headers.push(cleaned); colIdx.push(i); }
+        });
+
+        const keys = headers.map(h => toKey(h));
+        const dateKeys = new Set(keys.filter(k => k.includes('inspection') || k.includes('delivery') || k.includes('expected') || k.includes('date')));
+
+        const projects = [];
+        for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue;
+            const fields = parseLine(lines[i]);
+            if (!fields.some(f => f.trim())) continue;
+            const proj = {};
+            colIdx.forEach((ci, j) => {
+                let val = (ci < fields.length ? fields[ci] : '').replace(/^"|"$/g, '').trim();
+                if (dateKeys.has(keys[j])) val = parseInputDate(val);
+                proj[keys[j]] = val;
+            });
+            projects.push(proj);
+        }
+        return { headers, projects };
+    }
+
+    function parseInputDate(val) {
+        if (!val) return '';
+        let m = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) return `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+        m = val.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) return val;
+        return val;
+    }
+
+    let allData = { headers: [], projects: [] };
+    let lastFetch = 0;
+    const projectCache = {};
+    const urgentSet = new Set();
+
+    function cacheProject(proj) {
+        const id = getUrgentId(proj);
+        projectCache[id] = proj;
+    }
+
+    function getProjectInfo(id) {
+        const proj = projectCache[id];
+        if (!proj) return { name: id };
+        const keys = Object.keys(proj);
+        const nk = keys.find(k => k === 'name') || keys.find(k => k.includes('name') && !k.includes('last'));
+        const lk = keys.find(k => k.includes('last'));
+        const ck = keys.find(k => k === 'city');
+        const sk = keys.find(k => k === 'state');
+        const clk = keys.find(k => k.includes('claim'));
+        const dk = keys.find(k => k.includes('delivery') || k.includes('expected'));
+        return {
+            name: [proj[nk], proj[lk]].filter(Boolean).join(' ') || 'Unknown',
+            claim: clk ? proj[clk] : '',
+            location: [proj[ck], proj[sk]].filter(Boolean).join(', '),
+            status: deriveStatus(proj, keys).status,
+            delivery: dk ? proj[dk] : ''
+        };
+    }
+
+    function getUrgentId(proj) {
+        const keys = Object.keys(proj);
+        const ck = keys.find(k => k.includes('claim'));
+        const nk = keys.find(k => k === 'name') || keys.find(k => k.includes('name') && !k.includes('last'));
+        const lk = keys.find(k => k.includes('last'));
+        return (ck && proj[ck]) ? proj[ck] : [proj[nk], proj[lk]].filter(Boolean).join('_');
+    }
+
+    async function fetchSheetData() {
+        try {
+            const resp = await fetch(CSV_URL + '&_t=' + Date.now());
+            const text = await resp.text();
+            allData = parseCSV(text);
+            lastFetch = Date.now();
+            setStatus('Live data connected', 'ok');
+            return true;
+        } catch (e) {
+            setStatus('Unable to connect - please try again', 'err');
+            return false;
+        }
+    }
+
+    function searchLocal(query) {
+        if (!query) return [];
+        const q = query.toLowerCase();
+        const searchKeys = Object.keys(allData.projects[0] || {}).filter(k => k.includes('name') || k.includes('claim') || k.includes('last'));
+        if (!searchKeys.length) {
+            return allData.projects.filter(p => Object.values(p).some(v => String(v).toLowerCase().includes(q)));
+        }
+        return allData.projects.filter(p => searchKeys.some(k => String(p[k] || '').toLowerCase().includes(q)));
+    }
+
+    function setStatus(msg, cls) {
+        const bar = document.getElementById('statusBar');
+        bar.textContent = msg;
+        bar.className = 'status-bar' + (cls ? ' ' + cls : '');
+    }
+
+    const STAGES = ['Scheduled', 'Inspection', 'Report Writing', 'Delivered'];
+    const ICONS = {
+        'Scheduled': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>',
+        'Inspection': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+        'Report Writing': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+        'Delivered': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+    };
+
+    function parseDate(d) {
+        if (!d) return null;
+        const p = d.match(/(\d{4})-(\d{2})-(\d{2})/);
+        return p ? new Date(parseInt(p[1]), parseInt(p[2])-1, parseInt(p[3])) : null;
+    }
+
+    function deriveStatus(proj, keys) {
+        const now = new Date(); now.setHours(0,0,0,0);
+        const iKey = keys.find(k => k.includes('inspection'));
+        const dKey = keys.find(k => k.includes('delivery') || k.includes('expected'));
+        const dlKey = keys.find(k => k.includes('delay'));
+        const iDate = iKey ? parseDate(proj[iKey]) : null;
+        const dDate = dKey ? parseDate(proj[dKey]) : null;
+        const hasDelay = dlKey && proj[dlKey] && proj[dlKey].trim() !== '';
+        if (iDate) iDate.setHours(0,0,0,0);
+        if (dDate) dDate.setHours(0,0,0,0);
+        if (hasDelay) return { status: 'Delayed', stageIndex: -1 };
+        if (dDate && now > dDate) return { status: 'Delivered', stageIndex: 3 };
+        if (iDate && now >= iDate) return { status: 'Report Writing', stageIndex: 2 };
+        if (iDate && now < iDate) return { status: 'Scheduled', stageIndex: 0 };
+        return { status: 'Scheduled', stageIndex: 0 };
+    }
+
+    function getEta(delivery) {
+        if (!delivery) return '?';
+        const d = parseDate(delivery); if (!d) return '?';
+        const now = new Date(); now.setHours(0,0,0,0);
+        const days = Math.round((d - now) / 86400000);
+        if (days < 0) return `${Math.abs(days)}d overdue`;
+        if (days === 0) return 'Today';
+        if (days === 1) return 'Tomorrow';
+        return `${days} days`;
+    }
+
+    function fmtDate(d) {
+        if (!d) return '-';
+        const dt = parseDate(d);
+        return dt ? dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : d;
+    }
+
+    function toggleCard(el) {
+        el.closest('.card').classList.toggle('expanded');
+    }
+
+    function toggleUrgent(id) {
+        if (urgentSet.has(id)) urgentSet.delete(id);
+        else urgentSet.add(id);
+        doSearch();
+    }
+
+    function toggleRequestForm(id) {
+        const uid = id.replace(/[^a-zA-Z0-9]/g, '_');
+        const el = document.getElementById('rq_' + uid);
+        if (el) el.classList.toggle('open');
+    }
+
+    function doSendRequest(id, uid) {
+        const dateEl = document.getElementById('rd_' + uid);
+        const commentEl = document.getElementById('rc_' + uid);
+        const msgEl = document.getElementById('rs_' + uid);
+        const info = getProjectInfo(id);
+
+        const date = dateEl ? dateEl.value : '';
+        const comment = commentEl ? commentEl.value : '';
+
+        if (!date && !comment) {
+            if (msgEl) { msgEl.style.display = 'block'; msgEl.style.color = 'var(--red)'; msgEl.textContent = 'Please enter a date or comment.'; }
+            return;
+        }
+
+        const subject = encodeURIComponent('URGENT: ' + info.name + ' - AF Tracker');
+        let body = 'Name: ' + info.name + '\n';
+        if (info.claim) body += 'Claim #: ' + info.claim + '\n';
+        if (info.location) body += 'Location: ' + info.location + '\n';
+        if (info.status) body += 'Status: ' + info.status + '\n';
+        if (date) body += 'Requested Delivery Date: ' + date + '\n';
+        if (comment) body += 'Comment: ' + comment + '\n';
+        body += '\nSent from AF Tracker Web';
+
+        window.open('mailto:advanceforensic@gmail.com?subject=' + subject + '&body=' + encodeURIComponent(body), '_self');
+
+        if (msgEl) {
+            msgEl.style.display = 'block';
+            msgEl.style.color = 'var(--green)';
+            msgEl.textContent = 'This message was sent to Advance Forensic Team and they will take care of it urgently.';
+        }
+    }
+
+    function renderCard(proj) {
+        const keys = Object.keys(proj);
+        const nk = keys.find(k => k === 'name') || keys.find(k => k.includes('name') && !k.includes('last'));
+        const lk = keys.find(k => k.includes('last'));
+        const ck = keys.find(k => k === 'city');
+        const sk = keys.find(k => k === 'state');
+        const ik = keys.find(k => k.includes('inspection'));
+        const dk = keys.find(k => k.includes('delivery') || k.includes('expected'));
+        const clk = keys.find(k => k.includes('claim'));
+        const crk = keys.find(k => k.includes('carrier'));
+
+        const name = [proj[nk], proj[lk]].filter(Boolean).join(' ') || 'Client';
+        const loc = [proj[ck], proj[sk]].filter(Boolean).join(', ');
+        const claim = clk ? proj[clk] : '';
+        const carrier = crk ? proj[crk] : '';
+        cacheProject(proj);
+        const { status, stageIndex } = deriveStatus(proj, keys);
+        const delivery = dk ? proj[dk] : '';
+        const inspection = ik ? proj[ik] : '';
+        const eta = getEta(delivery);
+        const done = stageIndex === 3;
+        const delayed = stageIndex === -1;
+        const active = delayed ? 2 : stageIndex;
+        const urgentId = getUrgentId(proj);
+        const isUrgent = urgentSet.has(urgentId);
+
+        let etaCls = '';
+        if (done) etaCls = 'delivered';
+        else if (delayed) etaCls = 'delayed';
+        else if (eta.includes('overdue')) etaCls = 'overdue';
+
+        const steps = STAGES.map((s, i) => {
+            let c = '';
+            if (done) c = 'done';
+            else if (i < active) c = 'done';
+            else if (i === active && !delayed) c = 'active';
+            return `<div class="step ${c}"><div class="step-dot">${ICONS[s]}</div><span class="step-label">${s}</span></div>`;
+        }).join('');
+
+        const escapedId = urgentId.replace(/'/g, "\\'");
+        const uid = urgentId.replace(/[^a-zA-Z0-9]/g, '_');
+
+        return `<div class="card expanded${isUrgent ? ' urgent' : ''}">
+            <div class="card-row" onclick="toggleCard(this)">
+                <span class="card-name">${name}</span>
+                ${claim ? `<span class="card-claim">#${claim}</span>` : ''}
+                <span class="card-eta ${etaCls}">${delayed ? 'Delayed' : eta}</span>
+                <span class="card-flag ${isUrgent ? 'flagged' : ''}" onclick="event.stopPropagation(); toggleUrgent('${escapedId}')" title="${isUrgent ? 'Remove urgent flag' : 'Mark as urgent'}">
+                    <svg viewBox="0 0 24 24" fill="${isUrgent ? 'var(--red)' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                </span>
+                <svg class="card-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="card-detail">
+                <div class="steps">${steps}</div>
+                <div class="info-grid">
+                    <div class="info-item"><span class="info-key">Status</span><span class="info-val">${status}</span></div>
+                    ${carrier ? `<div class="info-item"><span class="info-key">Carrier</span><span class="info-val">${carrier}</span></div>` : ''}
+                    ${loc ? `<div class="info-item"><span class="info-key">Location</span><span class="info-val">${loc}</span></div>` : ''}
+                    ${claim ? `<div class="info-item"><span class="info-key">Claim #</span><span class="info-val">${claim}</span></div>` : ''}
+                    <div class="info-item"><span class="info-key">Inspection</span><span class="info-val">${fmtDate(inspection)}</span></div>
+                    <div class="info-item"><span class="info-key">Expected Delivery</span><span class="info-val">${fmtDate(delivery)}</span></div>
+                </div>
+                <button class="urgent-btn${isUrgent ? ' is-urgent' : ''}" onclick="event.stopPropagation(); toggleRequestForm('${escapedId}')">${isUrgent ? 'MARKED URGENT' : 'MARK URGENT'}</button>
+                <div class="request-form" id="rq_${uid}">
+                    <div class="request-form-title">REQUEST URGENT DELIVERY</div>
+                    <div class="form-row">
+                        <label>Date</label>
+                        <input type="date" id="rd_${uid}" onclick="event.stopPropagation()">
+                    </div>
+                    <textarea id="rc_${uid}" placeholder="Add a comment..." onclick="event.stopPropagation()"></textarea>
+                    <div style="margin-top:6px;">
+                        <button class="submit-btn" onclick="event.stopPropagation(); doSendRequest('${escapedId}', '${uid}')">Request Urgent Delivery</button>
+                        <div class="request-msg" id="rs_${uid}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    async function doSearch() {
+        const q = document.getElementById('searchInput').value.trim();
+        const section = document.getElementById('resultsSection');
+        const empty = document.getElementById('emptyState');
+
+        if (!q) {
+            section.innerHTML = '';
+            section.appendChild(empty);
+            empty.style.display = '';
+            return;
+        }
+
+        if (empty) empty.style.display = 'none';
+
+        if (Date.now() - lastFetch > 120000) {
+            section.innerHTML = '<div class="loading"><div class="spinner"></div><p style="color:var(--text-dim);font-size:13px;">Loading data...</p></div>';
+            await fetchSheetData();
+        }
+
+        const matches = searchLocal(q);
+        if (!matches.length) {
+            section.innerHTML = '<div class="empty-state" style="padding:40px 20px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--text-dim);opacity:0.4;margin-bottom:8px;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>No results found for "' + q.replace(/</g, '&lt;') + '"</p></div>';
+            return;
+        }
+
+        section.innerHTML = '<div class="results-count">' + matches.length + ' result' + (matches.length === 1 ? '' : 's') + ' found</div>' + matches.map(p => renderCard(p)).join('');
+    }
+
+    document.getElementById('searchInput').addEventListener('keypress', e => {
+        if (e.key === 'Enter') doSearch();
+    });
+
+    let debounce;
+    document.getElementById('searchInput').addEventListener('input', () => {
+        clearTimeout(debounce);
+        debounce = setTimeout(() => {
+            if (document.getElementById('searchInput').value.trim().length >= 2) doSearch();
+        }, 500);
+    });
+
+    fetchSheetData();
+</script>
+</body>
+</html>
