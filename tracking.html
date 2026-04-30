@@ -860,16 +860,13 @@
                 claim: info.claim || '',
                 location: info.location || '',
                 status: info.status || '',
-                'Requested Delivery Date': date,
-                comment: comment,
-                _subject: 'URGENT: ' + info.name + ' - AF Tracker',
-                _template: 'table',
-                _captcha: 'false'
+                date: date,
+                comment: comment
             };
 
-            const resp = await fetch('https://formsubmit.co/ajax/advanceforensic@gmail.com', {
+            const resp = await fetch('https://advanceforensic.com/wp-json/af/v1/send-email', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             });
             const result = await resp.json();
