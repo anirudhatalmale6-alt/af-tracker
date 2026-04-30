@@ -806,14 +806,15 @@
     }
 
     function toggleUrgent(id) {
-        const card = document.querySelector('.card.expanded');
-        if (card) {
-            const uid = id.replace(/[^a-zA-Z0-9]/g, '_');
-            const el = document.getElementById('rq_' + uid);
-            if (el) {
-                el.classList.add('open');
-                setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
+        const uid = id.replace(/[^a-zA-Z0-9]/g, '_');
+        const el = document.getElementById('rq_' + uid);
+        if (el) {
+            const card = el.closest('.card');
+            if (card && !card.classList.contains('expanded')) {
+                card.classList.add('expanded');
             }
+            el.classList.add('open');
+            setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
         }
     }
 
