@@ -271,17 +271,17 @@
         /* Info rows */
         .info-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px 16px;
+            grid-template-columns: 1fr;
+            gap: 2px;
         }
         .info-item {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 6px 0;
+            padding: 5px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            gap: 12px;
         }
-        .info-key { font-size: 12px; color: var(--text-dim); }
+        .info-key { font-size: 12px; color: var(--text-dim); min-width: 120px; flex-shrink: 0; }
         .info-val { font-size: 12px; font-weight: 600; }
 
         /* Urgent button */
@@ -476,7 +476,7 @@
             .search-section, .results-section, .download-banner { padding-left: 16px; padding-right: 16px; }
             .search-box { flex-direction: column; }
             .search-box button { width: 100%; }
-            .info-grid { grid-template-columns: 1fr; }
+            .info-key { min-width: 100px; }
             .download-inner { flex-direction: column; text-align: center; }
             .card-claim { display: none; }
         }
@@ -743,10 +743,11 @@
         if (el) el.classList.toggle('open');
     }
 
-    function doSendRequest(id, uid) {
+    async function doSendRequest(id, uid) {
         const dateEl = document.getElementById('rd_' + uid);
         const commentEl = document.getElementById('rc_' + uid);
         const msgEl = document.getElementById('rs_' + uid);
+        const btnEl = document.querySelector('#rq_' + uid + ' .submit-btn');
         const info = getProjectInfo(id);
 
         const date = dateEl ? dateEl.value : '';
@@ -757,22 +758,39 @@
             return;
         }
 
-        const subject = encodeURIComponent('URGENT: ' + info.name + ' - AF Tracker');
-        let body = 'Name: ' + info.name + '\n';
-        if (info.claim) body += 'Claim #: ' + info.claim + '\n';
-        if (info.location) body += 'Location: ' + info.location + '\n';
-        if (info.status) body += 'Status: ' + info.status + '\n';
-        if (date) body += 'Requested Delivery Date: ' + date + '\n';
-        if (comment) body += 'Comment: ' + comment + '\n';
-        body += '\nSent from AF Tracker Web';
+        if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Sending...'; }
+        if (msgEl) { msgEl.style.display = 'block'; msgEl.style.color = 'var(--text-mid)'; msgEl.textContent = 'Sending request...'; }
 
-        window.open('mailto:advanceforensic@gmail.com?subject=' + subject + '&body=' + encodeURIComponent(body), '_self');
+        try {
+            const formData = {
+                name: info.name,
+                claim: info.claim || '',
+                location: info.location || '',
+                status: info.status || '',
+                'Requested Delivery Date': date,
+                comment: comment,
+                _subject: 'URGENT: ' + info.name + ' - AF Tracker',
+                _template: 'table',
+                _captcha: 'false'
+            };
 
-        if (msgEl) {
-            msgEl.style.display = 'block';
-            msgEl.style.color = 'var(--green)';
-            msgEl.textContent = 'This message was sent to Advance Forensic Team and they will take care of it urgently.';
+            const resp = await fetch('https://formsubmit.co/ajax/advanceforensic@gmail.com', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            const result = await resp.json();
+
+            if (result.success) {
+                if (msgEl) { msgEl.style.color = 'var(--green)'; msgEl.textContent = 'This message was sent to Advance Forensic Team and they will take care of it urgently.'; }
+            } else {
+                if (msgEl) { msgEl.style.color = 'var(--red)'; msgEl.textContent = 'Failed to send. Please try again.'; }
+            }
+        } catch (e) {
+            if (msgEl) { msgEl.style.color = 'var(--red)'; msgEl.textContent = 'Network error. Please try again.'; }
         }
+
+        if (btnEl) { btnEl.disabled = false; btnEl.textContent = 'Request Urgent Delivery'; }
     }
 
     function renderCard(proj) {
