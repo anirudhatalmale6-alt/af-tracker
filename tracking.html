@@ -550,7 +550,7 @@
         <div class="header-inner">
             <img src="logo.png" alt="Advance Forensic" class="header-logo" id="headerLogo">
             <h1 class="header-title">Tracking Submitted Assignment Status</h1>
-            <p class="header-sub">Search by your name to track your inspection status</p>
+            <p class="header-sub">Search by your name to track your claim status</p>
         </div>
     </div>
 
@@ -963,7 +963,7 @@
                     ${carrier ? `<div class="info-item"><span class="info-key">Carrier</span><span class="info-val">${carrier}</span></div>` : ''}
                     ${loc ? `<div class="info-item"><span class="info-key">Location</span><span class="info-val">${loc}</span></div>` : ''}
                     ${claim ? `<div class="info-item"><span class="info-key">Claim #</span><span class="info-val">${claim}</span></div>` : ''}
-                    <div class="info-item"><span class="info-key">Inspection</span><span class="info-val">${fmtDate(inspection)}</span></div>
+                    <div class="info-item"><span class="info-key">Claim</span><span class="info-val">${fmtDate(inspection)}</span></div>
                     <div class="info-item"><span class="info-key">Expected Delivery</span><span class="info-val">${fmtDate(delivery)}</span></div>
                 </div>
                 <button class="urgent-btn${isUrgent ? ' is-urgent' : ''}" onclick="event.stopPropagation(); toggleRequestForm('${escapedId}')">${isUrgent ? 'MARKED URGENT' : 'MARK URGENT'}</button>
