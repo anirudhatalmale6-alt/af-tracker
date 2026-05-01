@@ -448,50 +448,49 @@
 
         /* ===== DOWNLOAD BANNER ===== */
         .download-banner {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0 24px;
+            background: linear-gradient(135deg, #f0f4f8, #e2e8f0);
+            border-top: 1px solid #cbd5e1;
+            margin-top: 40px;
+            padding: 14px 24px;
         }
         .download-inner {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 16px;
-            background: linear-gradient(135deg, #132244, #1a3060);
-            border: 1px solid rgba(39, 110, 241, 0.2);
-            border-radius: var(--radius);
-            padding: 16px 20px;
-            margin-top: 16px;
+            max-width: 900px;
+            margin: 0 auto;
         }
         .download-text { flex: 1; }
         .download-text h3 {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        .download-text p {
-            font-size: 12px;
-            color: var(--text-dim);
-        }
-        .download-btn {
-            background: var(--blue);
-            border: none;
-            border-radius: 8px;
-            color: #fff;
-            padding: 10px 20px;
             font-size: 13px;
             font-weight: 600;
+            color: #334155;
+            margin-bottom: 2px;
+        }
+        .download-text p {
+            font-size: 11px;
+            color: #64748b;
+        }
+        .download-btn {
+            background: #334155;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 500;
             cursor: pointer;
             font-family: inherit;
             white-space: nowrap;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             transition: background 0.2s;
         }
-        .download-btn:hover { background: var(--blue-hover); }
-        .download-btn svg { width: 16px; height: 16px; }
+        .download-btn:hover { background: #1e293b; }
+        .download-btn svg { width: 14px; height: 14px; }
 
         /* ===== STATUS BAR ===== */
         .status-bar {
